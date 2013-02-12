@@ -119,6 +119,7 @@ namespace VersionUpdateTool
 
         public static void ShowUsage()
         {
+            Console.WriteLine("v1.2");
             Console.WriteLine("[/root:<absolutepath>] [/manifest:<relativepath>] [/key:<somevalue>]");
         }
     }

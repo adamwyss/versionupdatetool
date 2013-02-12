@@ -204,6 +204,10 @@ namespace VersionUpdateTool
                     Console.WriteLine("{0} contains more than 10 characters, which is not allowed in the Phone manifest. Using {1} for the WMAppManifest.xml", versionAsString, truncatedVersion);
                     versionAttribute.Value = truncatedVersion;
                 }
+                else
+                {
+                    versionAttribute.Value = versionAsString;
+                }
 
                 return true;
             }
