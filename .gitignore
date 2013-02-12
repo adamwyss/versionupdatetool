@@ -1,0 +1,6 @@
+bin
+obj
+
+*.suo
+*.user
+Thumbs.db

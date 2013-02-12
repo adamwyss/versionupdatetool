@@ -92,7 +92,7 @@ namespace VersionUpdateTool
                         XAttribute versionAttribute = appElement.Attribute("Version");
                         if (versionAttribute != null)
                         {
-                            bool success = UpdateVersionAttributeWithLatestVersion(versionAttribute, out version);
+                            bool success = UpdateVersionAttributeWithLatestVersionAdjusted(versionAttribute, out version);
                             if (success)
                             {
                                 doc.Save(path);
@@ -168,6 +168,54 @@ namespace VersionUpdateTool
             version = null;
             return false;
         }
+
+
+        // windows phone only accepts a 10 character version number for some insane reason.  
+        // to work around this, we will apply the version number as days since a specific date
+        private static readonly DateTime Epoch = new DateTime(2010, 1, 1);
+        private static bool UpdateVersionAttributeWithLatestVersionAdjusted(XAttribute versionAttribute, out Version version)
+        {
+            string versionString = versionAttribute.Value;
+
+            Version manifestVersion;
+            bool success = Version.TryParse(versionString, out manifestVersion);
+            if (success)
+            {
+                TimeSpan elapsedTime = DateTime.Today.Subtract(Epoch);
+                int build = Convert.ToInt32(elapsedTime.TotalDays);                
+
+                int revision = 0;
+
+                BuildVersionInfo buildInfo = new BuildVersionInfo(Arguments.ApplicationKey);
+                if (buildInfo.Build == build)
+                {
+                    revision = buildInfo.Revision + 1;
+                }
+
+                buildInfo.Build = build;
+                buildInfo.Revision = revision;
+                buildInfo.Update();
+
+                version = new Version(manifestVersion.Major, manifestVersion.Minor, build, revision);
+                string versionAsString = version.ToString();
+                if (versionAsString.Length > 10)
+                {
+                    string truncatedVersion = versionAsString.Substring(0, 10);
+                    Console.WriteLine("{0} contains more than 10 characters, which is not allowed in the Phone manifest. Using {1} for the WMAppManifest.xml", versionAsString, truncatedVersion);
+                    versionAttribute.Value = truncatedVersion;
+                }
+
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("{0} is not a valid version string.", versionString);
+            }
+
+            version = null;
+            return false;
+        }
+
 
     }
 }
